@@ -1,0 +1,315 @@
+ 
+      * Generation Parameters - SCRVER(02)            Do Not Delete|                
+       IDENTIFICATION DIVISION.                                                     
+       PROGRAM-ID. PPG39.                                                           
+      *                                                                             
+      * Copyright 1986-2014, Computer Sciences Corporation.                         
+      *                                                                             
+      *                                                                             
+      *REMARKS.                                                                     
+      *                                                                             
+      * The remarks section should detail the main processes of the                 
+      * program and any special functions.                                          
+      *                                                                             
+      ***********************************************************************       
+      *           AMENDMENT  HISTORY                                        *       
+      ***********************************************************************       
+      * DATE.... VSN/MOD  WORK UNIT    BY....                               *       
+      *                                                                     *       
+      **DD/MM/YY*************************************************************       
+      /                                                                             
+        ENVIRONMENT DIVISION.                                           
+        CONFIGURATION SECTION.                                          
+        SOURCE-COMPUTER. IBM-AS400.                                     
+        OBJECT-COMPUTER. IBM-AS400.                                     
+                                                                        
+        DATA DIVISION.                                                  
+        WORKING-STORAGE SECTION.                                        
+        01  WSAA-PROG                   PIC X(05) VALUE 'PPG39'.        
+        01  WSAA-VERSION                PIC X(02) VALUE '01'.           
+        01  WS-DATE-6.                                                  
+            05  WS-YY       PIC 99.                                     
+            05  WS-MM       PIC 99.                                     
+            05  WS-DD       PIC 99.                                     
+        01  WS-DATE-8.                                                  
+            05  WS-YEAR     PIC 9999.                                   
+            05  WS-MONTH    PIC 99.                                     
+            05  WS-DAY      PIC 99.                                     
+        01  DIGIT-FLAG      PIC X VALUE 'N'.                            
+        01  I               PIC 99.                                     
+       *                                                                
+     
+        01  ERRORS.                                                           
+            03  E005                    PIC X(04) VALUE 'E005'.               
+            03  ERR2                    PIC X(04) VALUE 'ERR2'.               
+            03  ERR3                    PIC X(04) VALUE 'ERR3'.               
+            03  ERR4                    PIC X(04) VALUE 'ERR4'.               
+            03  ERR5                    PIC X(04) VALUE 'ERR5'.               
+       *                                                                      
+        01  TABLES.                                                           
+            03  TNNNN                   PIC X(05) VALUE 'TNNNN'.              
+       *                                                                      
+        01  FORMATS.                                                          
+            03  ZEMLREC                 PIC X(10) VALUE 'ZEMLREC'.            
+            03  CHDRREC                 PIC X(10) VALUE 'CHDRREC'.            
+       /                                                                      
+            COPY OPSTATSREC.                                                  
+       /                                                                      
+            COPY SYSERRREC.                                                   
+       /                                                                      
+            COPY VARCOM.                                                      
+            COPY ZEMLSKM.                                                     
+                                                                              
+            
+      /                                                                    
+       LINKAGE SECTION.                                                    
+                                                                           
+           COPY WSSPCOMN.                                                  
+      /                                                                    
+       01  WSSP-USER-AREA              PIC X(768).                         
+      /                                                                    
+           COPY SCRNPARAMS.                                                
+      /                                                                    
+           COPY SPG39SCR.                                                  
+      /                                                                    
+       PROCEDURE DIVISION           USING WSSP-COMMON-AREA                 
+                                          WSSP-USER-AREA                   
+                                          SCRN-SCREEN-PARAMS               
+                                          SPG39-DATA-AREA.                 
+                                                                           
+           COPY MAING.                                                     
+      /                                                                    
+      *****************************************************************    
+      *      Initialise Fields for showing on Screen                       
+                                                       
+      *****************************************************************         
+      *                                                                         
+       1000-INITIALISE SECTION.                                                 
+      *************************                                                 
+      *                                                                         
+       1010-INITIALISE.                                                         
+      *                                                                         
+      *  Initialise Fields                                                      
+      *                                                                         
+           MOVE SPACES                 TO SPG39-DATA-AREA.                      
+                                                                                
+      *    Dummy field initialisation for prototype version.                    
+******     MOVE ZERO                                                            
+******          TO SPG39-DTEOJ                    .                             
+                                                                                
+                                                                                
+            MOVE SPACES                  TO ZEML-DATA-KEY                       
+            MOVE RETRV                   TO ZEML-FUNCTION                       
+            MOVE ZEMLREC                 TO ZEML-FORMAT                         
+            MOVE O-K                     TO ZEML-STATUZ                         
+                                                                                
+
+                                                                           
+            CALL 'ZEMLIO' USING ZEML-PARAMS                                
+            IF ZEML-STATUZ NOT = O-K                                       
+               MOVE ZEML-PARAMS          TO SYSR-PARAMS                    
+               MOVE ZEML-STATUZ          TO SYSR-STATUZ                    
+               PERFORM 600-FATAL-ERROR                                     
+            END-IF.                                                        
+            MOVE ZEML-EMPID              TO SPG39-EMPID.                   
+                                                                           
+            MOVE SPACES                  TO ZEML-DATA-KEY                  
+            MOVE RLSE                    TO ZEML-FUNCTION                  
+            MOVE ZEMLREC                 TO ZEML-FORMAT                    
+            MOVE O-K                     TO ZEML-STATUZ                    
+                                                                           
+            CALL 'ZEMLIO' USING ZEML-PARAMS                                
+            IF ZEML-STATUZ NOT = O-K                                       
+               MOVE ZEML-PARAMS          TO SYSR-PARAMS                    
+               MOVE ZEML-STATUZ          TO SYSR-STATUZ                    
+               PERFORM 600-FATAL-ERROR                                     
+            END-IF.                                                        
+                                                                
+             ACCEPT WS-DATE-6 FROM DATE                         
+             IF WS-YY > 50                                      
+                COMPUTE WS-YEAR = ( 19 * 100 ) + WS-YY          
+             ELSE                                               
+                COMPUTE WS-YEAR = ( 20 * 100 ) + WS-YY          
+            END-IF                                              
+            MOVE WS-MM   TO  WS-MONTH                           
+            MOVE WS-DD   TO  WS-DAY                             
+            MOVE WS-DATE-8        TO     SPG39-DTEOJ.           
+                                                                
+       *                                                        
+       *    Set screen fields                                   
+       *                                                        
+                                                                
+       *                                                        
+        1090-EXIT.                                              
+             EXIT.                                              
+       /                                                        
+       *                                                        
+      *    Sections performed from the 1000 section above.                    
+      *                                                                       
+      /                                                                       
+       PRE-SCREEN-EDIT SECTION.                                               
+      *************************                                               
+      *                                                                       
+       PRE-START.                                                             
+      *---------------------------------------------------------------*       
+      *    This section will handle any action required on the screen *       
+      *    before the screen is painted.                              *       
+      *---------------------------------------------------------------*       
+            GO TO PRE-EXIT.                                                   
+      *                                                                       
+       PRE-EXIT.                                                              
+           EXIT.                                                              
+      /                                                                       
+      *****************************************************************       
+      *     Retrieve Screen Fields and Edit                                   
+      *****************************************************************       
+      *                                                                       
+       2000-SCREEN-EDIT SECTION.                                          
+      **************************                                          
+      *                                                                   
+       2010-SCREEN-IO.                                                    
+      *                                                                   
+      *  Perform Screen Validation                                        
+      *                                                                   
+           MOVE O-K                    TO WSSP-EDTERROR. 
+              IF  SCRN-STATUZ              = CALC                   
+                  MOVE 'Y'                TO WSSP-EDTERROR          
+                  MOVE SPACES             TO  SPG39-DESGN           
+                  MOVE SPACES             TO  SPG39-DEPTNM          
+                  MOVE SPACES             TO  SPG39-EMPNM           
+              END-IF.                                                                
+      *                                                                   
+       2020-VALIDATE.                                                     
+      *                                                                   
+                                                                          
+             IF SPACES   = SPG39-EMPNM                                    
+                 MOVE ERR2        TO   SPG39-EMPNM-ERR                    
+             ELSE                                                         
+                                                                          
+             MOVE 'N' TO DIGIT-FLAG                                       
+            PERFORM VARYING I FROM 1 BY 1 UNTIL I > 10                    
+                                   OR DIGIT-FLAG = 'Y'                    
+                EVALUATE SPG39-EMPNM(I:1)                                 
+                    WHEN '0' THRU '9'                                
+                        MOVE 'Y' TO DIGIT-FLAG                       
+                END-EVALUATE                                         
+            END-PERFORM                                              
+                                                                     
+                                                                     
+            IF DIGIT-FLAG = 'Y'                                      
+                MOVE ERR3 TO SPG39-EMPNM-ERR                         
+            END-IF.                                                  
+            IF SPACES   = SPG39-DESGN                                
+                MOVE ERR2        TO   SPG39-DESGN-ERR                
+            ELSE                                                     
+                                                                     
+            MOVE 'N' TO DIGIT-FLAG                                   
+            PERFORM VARYING I FROM 1 BY 1 UNTIL I > 10               
+                                   OR DIGIT-FLAG = 'Y'               
+                EVALUATE SPG39-DESGN(I:1)                            
+                    WHEN '0' THRU '9'                                
+                                                                     
+                        MOVE 'Y' TO DIGIT-FLAG                       
+                END-EVALUATE                                          
+            END-PERFORM                                               
+                                                                      
+                                                                      
+            IF DIGIT-FLAG = 'Y'                                       
+                MOVE ERR4 TO SPG39-DESGN-ERR                          
+            END-IF.                                                   
+                                                                      
+            IF SPACES   = SPG39-DEPTNM                                
+                MOVE ERR2        TO   SPG39-DEPTNM-ERR                
+            ELSE                                                      
+            MOVE 'N' TO DIGIT-FLAG                                    
+            PERFORM VARYING I FROM 1 BY 1 UNTIL I > 10                
+                                   OR DIGIT-FLAG = 'Y'                
+                EVALUATE SPG39-DEPTNM(I:1)                            
+                    WHEN '0' THRU '9'                                 
+                        MOVE 'Y' TO DIGIT-FLAG                        
+                END-EVALUATE                                          
+            END-PERFORM                                               
+            IF DIGIT-FLAG = 'Y'                                       
+                MOVE ERR5 TO SPG39-DEPTNM-ERR                          
+            END-IF.                                                    
+                                                                       
+      *                                                                
+       2080-CHECK-FOR-ERRORS.                                          
+      *                                                                
+           IF  SPG39-ERROR-INDICATORS                                  
+                                    NOT = SPACES                       
+               MOVE 'Y'                TO WSSP-EDTERROR                
+           END-IF.                                                     
+      *                                                                
+       2090-EXIT.                                                      
+            EXIT.                                                      
+      /                                                                
+                                                                       
+      *                                                                
+      *    Sections performed from the 2000 section above.             
+      *                                                                
+                                                                       
+      /                                                                
+      *****************************************************************       
+      *     Update Database if required and Log Transaction                   
+      *****************************************************************       
+      *                                                                       
+       3000-UPDATE SECTION.                                                   
+      *********************                                                   
+      *                                                                       
+       3010-UPDATE-DATABASE.                                                  
+      *                                                                       
+                                                                              
+                                                                              
+                IF WSSP-SBMACTION               = '1'                         
+                  MOVE SPACES                  TO ZEML-DATA-KEY               
+                  MOVE SPG39-EMPID             TO ZEML-EMPID                  
+                  MOVE SPG39-EMPNM             TO ZEML-EMPNM                  
+                  MOVE SPG39-DTEOJ             TO ZEML-DTEOJ                  
+                  MOVE SPG39-DESGN             TO ZEML-DESGN                  
+                  MOVE SPG39-DEPTNM            TO ZEML-DEPTNM                 
+                  MOVE WRITR                   TO ZEML-FUNCTION               
+               END-IF.                                                        
+                                                                                  
+                                                                                  
+              MOVE ZEMLREC                   TO ZEML-FORMAT                       
+              MOVE O-K                       TO ZEML-STATUZ                       
+              CALL 'ZEMLIO' USING ZEML-PARAMS                                     
+                                                                                  
+              IF ZEML-STATUZ           NOT = O-K                                  
+                MOVE ZEML-PARAMS          TO SYSR-PARAMS                          
+                MOVE ZEML-STATUZ          TO SYSR-STATUZ                          
+                PERFORM 600-FATAL-ERROR                                           
+             END-IF.                                                              
+                                                                                  
+      *                                                                           
+      *  Update database files as required / WSSP                                 
+      *                                                                           
+                                                                                  
+       3090-EXIT.                                                                 
+            EXIT.                                                                 
+                                                                                  
+      /                                                                           
+                                                                            
+       *                                                                    
+       *    Sections performed from the 3000 section above.                 
+       *                                                                    
+                                                                            
+       /                                                                    
+       *****************************************************************    
+       *     Decide which Transaction Program is Next                       
+       *****************************************************************    
+       *                                                                    
+        4000-WHERE-NEXT SECTION.                                            
+       *************************                                            
+       *                                                                    
+        4010-NEXT-PROGRAM.                                                  
+       *                                                                    
+       *  Set Next Program                                                  
+       *                                                                    
+            ADD 1                       TO WSSP-PROGRAM-PTR.                
+       *                                                                    
+       *                                                                    
+       4090-EXIT.              
+            EXIT.              
+

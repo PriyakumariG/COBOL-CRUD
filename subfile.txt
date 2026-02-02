@@ -1,0 +1,370 @@
+ 
+      * Generation Parameters - SCRVER(02)            Do Not Delete|                 
+       IDENTIFICATION DIVISION.                                                      
+       PROGRAM-ID. PPG38.                                                            
+      *                                                                              
+      * Copyright 1986-2014, Computer Sciences Corporation.                          
+      *                                                                              
+      *                                                                              
+      *REMARKS.                                                                      
+      *                                                                              
+      * The remarks section should detail the main processes of the                  
+      * program and any special functions.                                           
+      *                                                                              
+      ***********************************************************************        
+      *           AMENDMENT  HISTORY                                        *        
+      ***********************************************************************        
+      * DATE.... VSN/MOD  WORK UNIT    BY....                               *        
+      *                                                                     *        
+      **DD/MM/YY*************************************************************        
+      /                                                                              
+        ENVIRONMENT DIVISION.                                                  
+        CONFIGURATION SECTION.                                                 
+        SOURCE-COMPUTER. IBM-AS400.                                            
+        OBJECT-COMPUTER. IBM-AS400.                                            
+                                                                               
+        DATA DIVISION.                                                         
+        WORKING-STORAGE SECTION.                                               
+        01  WSAA-PROG                   PIC X(05) VALUE 'PPG38'.               
+        01  WSAA-VERSION                PIC X(02) VALUE '01'.                  
+       *                                                                       
+        01  ERRORS.                                                            
+            03  E005                    PIC X(04) VALUE 'E005'.                
+       *                                                                       
+        01  TABLES.                                                            
+            03  TNNNN                   PIC X(05) VALUE 'TNNNN'.               
+       *                                                                       
+        01  FORMATS.                                                           
+            03  ZEMLREC                 PIC X(10) VALUE 'ZEMLREC'.             
+       /                                                                       
+            COPY VARCOM.                                                       
+                                                                               
+      *                                                                
+           COPY SYSERRREC.                                             
+      *                                                                
+           COPY OPSTATSREC.                                            
+           COPY ZEMLSKM.                                               
+      /                                                                
+       LINKAGE SECTION.                                                
+                                                                       
+           COPY WSSPCOMN.                                              
+                                                                       
+       01  WSSP-USER-AREA              PIC X(768).                     
+                                                                       
+           COPY SCRNPARAMS.                                            
+                                                                       
+           COPY SPG38SCR.                                              
+      /                                                                
+       PROCEDURE DIVISION           USING WSSP-COMMON-AREA             
+                                          WSSP-USER-AREA               
+                                          SCRN-SCREEN-PARAMS           
+                                          SPG38-DATA-AREA              
+                                          SPG38-SUBFILE-AREA.                    
+                                                                                 
+           COPY MAING.                                                           
+      /                                                                          
+      *****************************************************************          
+      *      Initialise Fields for showing on Screen                             
+      *****************************************************************          
+      *                                                                          
+       1000-INITIALISE SECTION.                                                  
+      *************************                                                  
+      *                                                                          
+       1010-INITIALISE.                                                          
+      *                                                                          
+      * Initialise Fields                                                        
+      *                                                                          
+           MOVE SPACES                 TO SPG38-DATA-AREA.                       
+           MOVE SPACES                 TO SPG38-SUBFILE-AREA.                    
+                                                                                 
+      * Dummy subfile initialisation for prototype - replace with SCLR           
+           MOVE SCLR                   TO SCRN-FUNCTION.                         
+                                                                              
+           CALL 'SPG38IO'           USING SCRN-SCREEN-PARAMS                  
+                                          SPG38-DATA-AREA                     
+                                          SPG38-SUBFILE-AREA.                 
+                                                                              
+           IF  SCRN-STATUZ          NOT = O-K                                 
+               MOVE SCRN-STATUZ        TO SYSR-STATUZ                         
+               PERFORM 600-FATAL-ERROR                                        
+           END-IF.                                                            
+                                                                              
+           MOVE 1                      TO SCRN-SUBFILE-RRN.                   
+                                                                              
+      *    Dummy field initialisation for prototype version.                  
+******                                                                        
+                                                                              
+      *                                                                       
+      *    Set screen fields                                                  
+      *                                                                       
+                                                                              
+           INITIALIZE                     ZEML-PARAMS                         
+            MOVE SPACES                 TO ZEML-EMPID                 
+            MOVE ZEMLREC                TO ZEML-FORMAT                
+            MOVE BEGN                   TO ZEML-FUNCTION.             
+            MOVE O-K                    TO ZEML-STATUZ                
+                                                                      
+                                                                      
+            PERFORM  1200-LOAD-SUBFILE                                
+                       UNTIL ZEML-STATUZ = ENDP.                      
+            MOVE 1                      TO SCRN-SUBFILE-RRN.          
+       *                                                              
+       *    Perform section to load first page of subfile             
+       *    Example:                                                  
+       *    PERFORM  1200-LOAD-SUBFILE                                
+       *               UNTIL ABCD-STATUZ = ENDP OR                    
+       *                      WSAA-COUNT = SXXXX-SUBFILE-PAGE.        
+       *                                                              
+                                                                      
+       *                                                              
+        1090-EXIT.                                                    
+             EXIT.                                                    
+
+      /                                                                         
+                                                                                
+      *                                                                         
+      *    Sections performed from the 1000 section above.                      
+      *      (including subfile load section)                                   
+      * e.g. 1200-LOAD-SUBILE SECTION.                                          
+      *                                                                         
+                                                                                
+       1200-LOAD-SUBFILE SECTION.                                               
+                                                                                
+       1210-BEGIN.                                                              
+                                                                                
+           CALL 'ZEMLIO'            USING ZEML-PARAMS.                          
+           IF  ZEML-STATUZ          NOT = O-K                                   
+           AND ZEML-STATUZ          NOT = ENDP                                  
+               MOVE ZEML-PARAMS        TO SYSR-PARAMS                           
+               MOVE ZEML-STATUZ        TO SYSR-STATUZ                           
+               PERFORM 600-FATAL-ERROR                                          
+           END-IF.                                                              
+           IF  ZEML-STATUZ              = ENDP                                  
+
+               MOVE ENDP               TO ZEML-STATUZ                     
+               GO TO  1290-EXIT                                           
+           END-IF.                                                        
+                                                                          
+           MOVE ZEML-EMPID             TO SPG38-EMPID                     
+           MOVE ZEML-EMPNM             TO SPG38-EMPNM                     
+           MOVE ZEML-DESGN             TO SPG38-DESGN                     
+           MOVE ZEML-DTEOJ             TO SPG38-DTEOJ                     
+                                                                          
+           MOVE SADD                   TO SCRN-FUNCTION.                  
+                                                                          
+           CALL 'SPG38IO'           USING SCRN-SCREEN-PARAMS              
+                                          SPG38-DATA-AREA                 
+                                          SPG38-SUBFILE-AREA.             
+                                                                          
+           IF  SCRN-STATUZ          NOT = O-K                             
+               MOVE SCRN-STATUZ        TO SYSR-STATUZ                     
+               PERFORM 600-FATAL-ERROR                                    
+           END-IF.                                                        
+                                                                          
+            MOVE NEXTR                  TO ZEML-FUNCTION.                          
+        1290-EXIT.                                                                 
+             EXIT.                                                                 
+       /                                                                           
+        PRE-SCREEN-EDIT SECTION.                                                   
+       *************************                                                   
+       *                                                                           
+        PRE-START.                                                                 
+       *---------------------------------------------------------------*           
+       *    This section will handle any action required on the screen *           
+       *    before the screen is painted.                              *           
+       *---------------------------------------------------------------*           
+             GO TO PRE-EXIT.                                                       
+       *                                                                           
+        PRE-EXIT.                                                                  
+            EXIT.                                                                  
+       /                                                                           
+       *****************************************************************           
+       *     Retrieve Screen fields and Edit                                       
+       *****************************************************************           
+
+      *                                                                           
+       2000-SCREEN-EDIT SECTION.                                                  
+      **************************                                                  
+      *                                                                           
+       2010-SCREEN-IO.                                                            
+      *                                                                           
+      *  Perform Screen Validation                                                
+      *                                                                           
+                                                                                  
+           IF SCRN-STATUZ               = 'CALC'                                  
+           MOVE SCLR                   TO SCRN-FUNCTION                           
+                                                                                  
+           CALL 'SPG38IO'           USING SCRN-SCREEN-PARAMS                      
+                                          SPG38-DATA-AREA                         
+                                          SPG38-SUBFILE-AREA                      
+                                                                                  
+           IF  SCRN-STATUZ          NOT = O-K                                     
+               MOVE SCRN-STATUZ        TO SYSR-STATUZ                             
+               PERFORM 600-FATAL-ERROR                                            
+           END-IF                                                                 
+           MOVE 1                      TO SCRN-SUBFILE-RRN             
+           INITIALIZE                     ZEML-PARAMS                  
+           MOVE SPACES                 TO ZEML-EMPID                   
+           MOVE ZEMLREC                TO ZEML-FORMAT                  
+           MOVE BEGN                   TO ZEML-FUNCTION                
+           MOVE O-K                    TO ZEML-STATUZ                  
+           PERFORM  1200-LOAD-SUBFILE                                  
+                      UNTIL ZEML-STATUZ = ENDP                         
+           MOVE 1                      TO SCRN-SUBFILE-RRN             
+           MOVE NORML          TO SCRN-FUNCTION                        
+           MOVE 'Y'                 TO WSSP-EDTERROR                   
+           GO TO 2090-EXIT                                             
+           END-IF.                                                     
+                                                                       
+           IF  SCRN-STATUZ              = 'KILL'                       
+               GO TO 2690-EXIT                                         
+           END-IF.                                                     
+      *                                                                
+       2010-VALIDATE-SCREEN.                                           
+      *                                                                
+                                                                                  
+                                                                                  
+       *                                                                          
+       *    Validate fields                                                       
+       *                                                                          
+                                                                                  
+                                                                                  
+                                                                                  
+       *                                                                          
+        2050-CHECK-FOR-ERRORS.                                                    
+       *                                                                          
+            IF  SPG38-ERROR-INDICATORS                                            
+                                     NOT = SPACES                                 
+                MOVE 'Y'                TO WSSP-EDTERROR                          
+            END-IF.                                                               
+       *                                                                          
+        2060-VALIDATE-SUBFILE.                                                    
+       *                                                                          
+            MOVE SRNCH                  TO SCRN-FUNCTION.                         
+                                                                                  
+            CALL 'SPG38IO'           USING SCRN-SCREEN-PARAMS                    
+                                           SPG38-DATA-AREA                       
+                                           SPG38-SUBFILE-AREA.                   
+                                                                                 
+            IF  SCRN-STATUZ          NOT = O-K                                   
+            AND SCRN-STATUZ          NOT = ENDP                                  
+                MOVE SCRN-STATUZ        TO SYSR-STATUZ                           
+                PERFORM 600-FATAL-ERROR                                          
+            END-IF.                                                              
+                                                                                 
+            PERFORM 2600-VALIDATE-SUBFILE                                        
+                       UNTIL SCRN-STATUZ = ENDP.                                 
+       *                                                                         
+        2090-EXIT.                                                               
+             EXIT.                                                               
+       /                                                                         
+       *****************************************************************         
+                                                                                 
+       *                                                                         
+       *    Sections performed from the 2000 section above.                      
+     *          (Screen validation)                                             
+     *                                                                          
+                                                                                
+     /                                                                          
+      2600-VALIDATE-SUBFILE SECTION.                                            
+     *******************************                                            
+     *                                                                          
+      2610-VALIDATION.                                                          
+     *                                                                          
+                                                                                
+                                                                                
+                                                                                
+     *                                                                          
+     *    Validate subfile fields                                               
+     *                                                                          
+                                                                                
+                                                                                
+                                                                                
+     *                                                                          
+      2670-UPDATE-ERROR-INDICATORS.                                             
+
+      *                                                                         
+           IF  SPG38-ERROR-SUBFILE  NOT = SPACES                                
+               MOVE 'Y'                TO WSSP-EDTERROR                         
+           END-IF.                                                              
+                                                                                
+           MOVE SUPD                   TO SCRN-FUNCTION.                        
+                                                                                
+           CALL 'SPG38IO'           USING SCRN-SCREEN-PARAMS                    
+                                          SPG38-DATA-AREA                       
+                                          SPG38-SUBFILE-AREA.                   
+           IF  SCRN-STATUZ          NOT = O-K                                   
+               MOVE SCRN-STATUZ        TO SYSR-STATUZ                           
+               PERFORM 600-FATAL-ERROR                                          
+           END-IF.                                                              
+      *                                                                         
+       2680-READ-NEXT-MODIFIED-RECORD.                                          
+      *                                                                         
+           MOVE SRNCH                  TO SCRN-FUNCTION.                        
+                                                                                
+           CALL 'SPG38IO'           USING SCRN-SCREEN-PARAMS                    
+                                           SPG38-DATA-AREA                          
+                                           SPG38-SUBFILE-AREA.                      
+                                                                                    
+            IF  SCRN-STATUZ          NOT = O-K                                      
+            AND SCRN-STATUZ          NOT = ENDP                                     
+                MOVE SCRN-STATUZ        TO SYSR-STATUZ                              
+                PERFORM 600-FATAL-ERROR                                             
+            END-IF.                                                                 
+       *                                                                            
+        2690-EXIT.                                                                  
+             EXIT.                                                                  
+       /                                                                            
+       *****************************************************************            
+                                                                                    
+       *                                                                            
+       *    Sections performed from the 2600 section above.                         
+       *                                                                            
+                                                                                    
+       /                                                                            
+       *****************************************************************            
+       *     Update Database if required and Log Transaction                    
+       *****************************************************************        
+       *                                                                        
+        3000-UPDATE SECTION.                                                    
+       *********************                                                    
+       *                                                                        
+        3010-UPDATE-DATABASE.                                                   
+       *                                                                        
+                                                                                
+       *                                                                        
+       *  Update database files as required                                     
+       *                                                                        
+                                                                                
+       *                                                                        
+        3090-EXIT.                                                              
+             EXIT.                                                              
+                                                                                
+       /                                                                        
+                                                                                
+       *                                                                        
+                                                                                
+
+
+       *    Sections performed from the 3000 section above.                       
+       *                                                                          
+                                                                                  
+       /                                                                          
+       *****************************************************************          
+       *     Decise which Transaction Program is Next                             
+       *****************************************************************          
+       *                                                                          
+        4000-WHERE-NEXT SECTION.                                                  
+       *************************                                                  
+       *                                                                          
+        4010-NEXT-PROGRAM.                                                        
+       *                                                                          
+       *  Set Next Program                                                        
+       *                                                                          
+            ADD 1                       TO WSSP-PROGRAM-PTR.                      
+       *                                                                          
+       *                                                                          
+        4090-EXIT.                                                                
+             EXIT.                                                                
+                                                                                  
+

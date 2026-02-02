@@ -1,0 +1,451 @@
+        * The remarks section should detail the main processes of the            
+      * program and any special functions.                                     
+      *                                                                        
+      ***********************************************************************  
+      *           AMENDMENT  HISTORY                                        *  
+      ***********************************************************************  
+      * DATE.... VSN/MOD  WORK UNIT    BY....                               *  
+      *                                                                     *  
+      **DD/MM/YY*************************************************************  
+      /                                                                        
+       ENVIRONMENT DIVISION.                                                   
+       CONFIGURATION SECTION.                                                  
+       SOURCE-COMPUTER. IBM-AS400.                                             
+       OBJECT-COMPUTER. IBM-AS400.                                             
+                                                                               
+       DATA DIVISION.                                                          
+       WORKING-STORAGE SECTION.                                                
+       01  WSAA-PROG                   PIC X(05) VALUE 'PPG34'.                
+       01  WSAA-VERSION                PIC X(02) VALUE '01'.                   
+      *                                                                        
+                                                                               
+       01  ERRORS.                                                         
+           03  E070                    PIC X(04) VALUE 'E070'.             
+           03  E073                    PIC X(04) VALUE 'E073'.             
+           03  E132                    PIC X(04) VALUE 'E132'.             
+           03  V133                    PIC X(04) VALUE 'V133'.             
+           03  AS01                    PIC X(04) VALUE 'AS01'.             
+           03  E492                    PIC X(04) VALUE 'E492'.             
+           03  LP01                    PIC X(04) VALUE 'LP01'.             
+           03  LP02                    PIC X(04) VALUE 'LP02'.             
+           03  LP03                    PIC X(04) VALUE 'LP03'.             
+           03  ERR6                    PIC X(04) VALUE 'ERR6'.             
+           03  ERR9                    PIC X(04) VALUE 'ERR9'.             
+           03  ERR1                    PIC X(04) VALUE 'ERR1'.             
+           03  EST1                    PIC X(04) VALUE 'EST1'.             
+           03  S666                    PIC X(04) VALUE 'S666'.             
+                                                                           
+      *                                                                    
+       01  TABLES.                                                         
+           03  TNNNN                   PIC X(05) VALUE 'TNNNN'.            
+      *                                                                    
+
+       01  FORMATS.                                                            
+           03  ZEMLREC                 PIC X(10) VALUE 'ZEMLREC'.              
+      *                                                                        
+       01  WSAA-BATCHKEY.                                                      
+           COPY BATCKEY.                                                       
+      /                                                                        
+           COPY VARCOM.                                                        
+      *                                                                        
+           COPY SYSERRREC.                                                     
+      *                                                                        
+           COPY OPSTATSREC.                                                    
+      *                                                                        
+           COPY SANCTNREC.                                                     
+      *                                                                        
+           COPY SUBPROGREC.                                                    
+      *                                                                        
+           COPY BCBPROGREC.                                                    
+      *                                                                        
+           COPY BATCDORREC.                                                    
+           COPY ZEMLSKM.                                                       
+                                                                               
+      /                                                                      
+       LINKAGE SECTION.                                                      
+                                                                             
+           COPY WSSPCOMN.                                                    
+                                                                             
+       01  WSSP-USER-AREA              PIC X(768).                           
+                                                                             
+           COPY SCRNPARAMS.                                                  
+                                                                             
+           COPY SPG34SCR.                                                    
+      /                                                                      
+       PROCEDURE DIVISION           USING WSSP-COMMON-AREA                   
+                                          WSSP-USER-AREA                     
+                                          SCRN-SCREEN-PARAMS                 
+                                          SPG34-DATA-AREA.                   
+                                                                             
+           COPY MAING.                                                       
+      /                                                                      
+      *****************************************************************      
+      *      Initialise fields for Showing on Screen                         
+
+     *****************************************************************     
+     *                                                                     
+      1000-INITIALISE SECTION.                                             
+     *************************                                             
+     *                                                                     
+      1010-INITIALISE.                                                     
+     *                                                                     
+     *  Initialise Fields                                                  
+     *                                                                     
+          MOVE SPACES                 TO SPG34-DATA-AREA.                  
+          MOVE WSSP-SBMACTION         TO SPG34-ACTION.                     
+          MOVE WSSP-BATCHKEY          TO WSKY-BATC-KEY.                    
+                                                                           
+          IF  WSKY-BATC-BATCACTMN  NOT = WSSP-ACCTMONTH                    
+          OR  WSKY-BATC-BATCACTYR  NOT = WSSP-ACCTYEAR                     
+              MOVE E070               TO SCRN-ERROR-CODE                   
+          END-IF.                                                          
+                                                                           
+*****                                                                      
+     *         
+       1090-EXIT.                                                                
+            EXIT.                                                                
+      /                                                                          
+       PRE-SCREEN-EDIT SECTION.                                                  
+      *************************                                                  
+      *                                                                          
+       PRE-START.                                                                
+      *---------------------------------------------------------------*          
+      *    This section will handle any action required on the screen *          
+      *    before the screen is painted.                              *          
+      *---------------------------------------------------------------*          
+           IF SPG34-ACTION              = '1' AND                                
+              SCRN-STATUZ               = O-K AND                                
+              WSSP-FLAG                 = 'Y'                                    
+                                                                                 
+              MOVE LP01                TO SCRN-ERROR-CODE                        
+           END-IF.                                                               
+           IF SPG34-ACTION              = '2' AND                                
+              SCRN-STATUZ               = O-K AND                                
+              WSSP-FLAG                 = 'Y'                                    
+                                                                                 
+                                            
+                                                                                 
+              MOVE LP02                TO SCRN-ERROR-CODE                        
+           END-IF.                                                               
+           IF SPG34-ACTION              = '3' AND                                
+              SCRN-STATUZ               = O-K AND                                
+              WSSP-FLAG                 = 'Y'                                    
+              MOVE LP03                TO SCRN-ERROR-CODE                        
+           END-IF.                                                               
+                                                                                 
+            GO TO PRE-EXIT.                                                      
+      *                                                                          
+       PRE-EXIT.                                                                 
+           EXIT.                                                                 
+      /                                                                          
+      *****************************************************************          
+      *     Retrieve Screen Fields and Edit                                      
+      *****************************************************************          
+      *                                                                          
+       2000-SCREEN-EDIT SECTION.                                                 
+      **************************                                                 
+                                                                                 
+                
+      *                                                                  
+       2010-VALIDATE.                                                    
+      *                                                                  
+      *  Validate the Screen                                             
+      *                                                                  
+           PERFORM 2100-VALIDATE-ACTION.                                 
+                                                                         
+                                                                         
+           IF  SPG34-ACTION-ERR         = SPACES                         
+               IF  SCRN-STATUZ      NOT = 'BACH'                         
+                   PERFORM 2200-VALIDATE-KEYS                            
+               ELSE                                                      
+                   PERFORM 2900-VERIFY-BATCH-CONTROL                     
+               END-IF                                                    
+           END-IF.                                                       
+                                                                         
+           IF SPG34-EMPID (1:3) NOT = 'EMP'  AND                         
+                                   SPG34-ACTION = '1'                    
+               MOVE ERR9 TO SPG34-EMPID-ERR                              
+           END-IF.                     
+                                                                                   
+             IF SPG34-ACTION = '1' OR  '2' OR                                      
+                                   '3' OR  '4'                                     
+                IF SPG34-EMPID = SPACES                                            
+                   MOVE ERR1 TO SPG34-EMPID-ERR                                    
+                END-IF                                                             
+             END-IF                                                                
+                                                                                   
+            IF   SPG34-EMPID            = SPACES AND                               
+                 SPG34-ACTION        NOT = '5'                                     
+                  MOVE V133              TO SPG34-EMPID-ERR                        
+            END-IF.                                                                
+                                                                                   
+            IF   SPG34-ACTION            = '5' AND                                 
+                  SPG34-EMPID         NOT = SPACES                                 
+                  MOVE EST1               TO SPG34-EMPID-ERR                       
+             END-IF.                                                               
+             IF SPG34-ACTION              =  '1'                                   
+             INITIALIZE                       ZEML-PARAMS                          
+                                  
+             MOVE SPG34-EMPID             TO  ZEML-EMPID                     
+             MOVE READR                   TO  ZEML-FUNCTION                  
+             MOVE ZEMLREC                 TO  ZEML-FORMAT                    
+             MOVE O-K                     TO  ZEML-STATUZ                    
+                                                                             
+             CALL 'ZEMLIO'             USING ZEML-PARAMS                     
+             IF ZEML-STATUZ            NOT = O-K AND MRNF                    
+                MOVE ZEML-PARAMS          TO SYSR-PARAMS                     
+                MOVE ZEML-STATUZ          TO SYSR-STATUZ                     
+             END-IF                                                          
+             IF ZEML-STATUZ                = O-K                             
+                MOVE ERR6                 TO SPG34-EMPID-ERR                 
+            END-IF                                                           
+            END-IF.                                                          
+            IF  SPG34-ACTION         NOT = '1'  AND                          
+                SPG34-ACTION         NOT = '2'  AND                          
+                SPG34-ACTION         NOT = '3'  AND                          
+                SPG34-ACTION         NOT = '4'  AND                          
+                SPG34-ACTION         NOT = '5'                               
+                MOVE S666               TO SPG34-ACTION-ERR                  
+           END-IF.                                                          
+           IF (SPG34-ACTION             = '2' OR '3' OR '4')                
+           INITIALIZE                     ZEML-PARAMS                       
+           MOVE SPG34-EMPID            TO ZEML-EMPID                        
+           MOVE READR                  TO ZEML-FUNCTION                     
+           MOVE ZEMLREC                TO ZEML-FORMAT                       
+           MOVE O-K                    TO ZEML-STATUZ                       
+                                                                            
+           CALL 'ZEMLIO'            USING ZEML-PARAMS                       
+                                                                            
+           IF ZEML-STATUZ           NOT = O-K AND MRNF                      
+              MOVE ZEML-PARAMS         TO SYSR-PARAMS                       
+              MOVE ZEML-STATUZ         TO SYSR-STATUZ                       
+           END-IF                                                           
+           IF  ZEML-STATUZ              = MRNF                              
+               MOVE AS01               TO SPG34-EMPID-ERR                   
+           END-IF                                                           
+           END-IF.                                                          
+      *                                                                     
+       2080-CHECK-FOR-ERRORS.                                               
+
+      *                                                                
+           IF  SPG34-ERROR-INDICATORS                                  
+                                    NOT = SPACES                       
+               MOVE 'Y'                TO WSSP-EDTERROR                
+           END-IF.                                                     
+           IF SCRN-STATUZ               = 'CALC'                       
+           MOVE SPACES                 TO SPG34-EMPID                  
+           MOVE SPACES                 TO SPG34-ACTION                 
+           MOVE 'Y'                    TO WSSP-EDTERROR                
+            END-IF.                                                    
+      *                                                                
+       2090-EXIT.                                                      
+            EXIT.                                                      
+      /                                                                
+       2100-VALIDATE-ACTION SECTION.                                   
+      ******************************                                   
+      *                                                                
+       2110-CHECK-AGAINST-TABLE.                                       
+      *                                                                
+      *  Validate Selected Action
+       *                                                                   
+            MOVE SCRN-ACTION            TO SUBP-ACTION.                    
+            MOVE WSSP-COMPANY           TO SUBP-COMPANY.                   
+            MOVE WSAA-PROG              TO SUBP-PROG-CODE.                 
+                                                                           
+            CALL 'SUBPROG'           USING SUBP-SUBPROG-REC.               
+                                                                           
+            IF  SUBP-STATUZ          NOT = O-K                             
+                MOVE SUBP-STATUZ        TO SPG34-ACTION-ERR                
+                GO TO 2190-EXIT                                            
+            END-IF.                                                        
+       *                                                                   
+        2120-CHECK-SANCTIONS.                                              
+       *                                                                   
+            MOVE 'SUBM'                 TO SNCT-FUNCTION.                  
+            MOVE WSSP-USERID            TO SNCT-USERID.                    
+            MOVE WSSP-COMPANY           TO SNCT-COMPANY.                   
+            MOVE WSSP-BRANCH            TO SNCT-BRANCH.                    
+            MOVE SUBP-TRANSCD           TO SNCT-TRANSCD.    
+           CALL 'SANCTN'            USING WSSP-COMMON-AREA                
+                                          SNCT-SANCTN-REC.                
+                                                                          
+           IF  SNCT-STATUZ              = BOMB                            
+               MOVE SNCT-SANCTN-REC    TO SYSR-PARAMS                     
+               MOVE '2'                TO SYSR-SYSERR-TYPE                
+               MOVE SNCT-STATUZ        TO SYSR-STATUZ                     
+               PERFORM 600-FATAL-ERROR                                    
+           END-IF.                                                        
+                                                                          
+           IF  SNCT-STATUZ          NOT = O-K                             
+               MOVE SNCT-STATUZ        TO SPG34-ACTION-ERR                
+           END-IF.                                                        
+      *                                                                   
+       2190-EXIT.                                                         
+            EXIT.                                                         
+      /                                                                   
+       2200-VALIDATE-KEYS SECTION.                                        
+      ****************************                                        
+      *                                                                   
+               
+        2210-VALIDATE-KEY1.                                                        
+       *                                                                           
+                                                                                   
+       *---------------------------------------------------------------*           
+       *    Validate fields                                            *           
+       *---------------------------------------------------------------*           
+                                                                                   
+       *                                                                           
+        2290-EXIT.                                                                 
+             EXIT.                                                                 
+       /                                                                           
+        2900-VERIFY-BATCH-CONTROL SECTION.                                         
+       ***********************************                                         
+       *                                                                           
+        2910-VALIDATE-REQUEST.                                                     
+       *                                                                           
+       *  Validate Request for Batch Control                                       
+       *                                                                           
+            IF  SUBP-BCHRQD          NOT = 'Y'                                     
+                MOVE E073               TO SPG34-ACTION-ERR  
+               GO TO 2990-EXIT                                          
+           END-IF.                                                      
+      *                                                                 
+       2920-RETRIEVE-BATCH-PROGS.                                       
+      *                                                                 
+           MOVE SUBP-TRANSCD           TO BCBP-TRANSCD.                 
+           MOVE WSSP-COMPANY           TO BCBP-COMPANY.                 
+                                                                        
+           CALL 'BCBPROG'           USING BCBP-BCBPROG-REC.             
+                                                                        
+           IF  BCBP-STATUZ          NOT = O-K                           
+               MOVE BCBP-STATUZ        TO SPG34-ACTION-ERR              
+               GO TO 2990-EXIT                                          
+           END-IF.                                                      
+                                                                        
+           MOVE BCBP-NXTPROG1          TO WSSP-NEXT1PROG.               
+           MOVE BCBP-NXTPROG2          TO WSSP-NEXT2PROG.               
+           MOVE BCBP-NXTPROG3          TO WSSP-NEXT3PROG.               
+           MOVE BCBP-NXTPROG4          TO WSSP-NEXT4PROG.               
+      *                                                  
+       2990-EXIT.                                                            
+            EXIT.                                                            
+      /                                                                      
+      *****************************************************************      
+      *     Update Database if required and Log Transaction                  
+      *****************************************************************      
+      *                                                                      
+       3000-UPDATE SECTION.                                                  
+      *********************                                                  
+      *                                                                      
+       3010-UPDATE-WSSP.                                                     
+      *                                                                      
+      *  Perform Updates                                                     
+      *                                                                      
+           MOVE SCRN-ACTION            TO WSSP-SBMACTION.                    
+           MOVE WSSP-BATCHKEY          TO WSAA-BATCHKEY.                     
+           MOVE SUBP-TRANSCD           TO WSKY-BATC-BATCTRCDE.               
+           MOVE WSAA-BATCHKEY          TO WSSP-BATCHKEY.                     
+           MOVE WSAA-PROG              TO WSSP-SUBMENU.                      
+               
+           IF  SCRN-STATUZ              = 'BACH'                             
+               GO TO 3090-EXIT                                               
+           END-IF.                                                           
+                                                                             
+           MOVE SUBP-NXT1PROG          TO WSSP-SEC-PROG (1).                 
+           MOVE SUBP-NXT2PROG          TO WSSP-SEC-PROG (2).                 
+           MOVE SUBP-NXT3PROG          TO WSSP-SEC-PROG (3).                 
+           MOVE SUBP-NXT4PROG          TO WSSP-SEC-PROG (4).                 
+                                                                             
+                                                                             
+      *---------------------------------------------------------------*      
+      *  Update WSSP Key details                                      *      
+      *---------------------------------------------------------------*      
+                                                                             
+                                                                             
+                                                                             
+      *                                                                      
+       3080-BATCHING.                                                        
+      *                                                                      
+           IF  SUBP-BCHRQD              = 'Y'                                
+           AND SPG34-ERROR-INDICATORS   = SPACES                         
+               PERFORM 3100-UPDATE-BATCH-CONTROL                         
+           END-IF.                                                       
+                                                                         
+           IF  SPG34-ERROR-INDICATORS                                    
+                                    NOT = SPACES                         
+               MOVE 'Y'                TO WSSP-EDTERROR                  
+               ROLLBACK                                                  
+           END-IF.                                                       
+      *                                                                  
+       3090-EXIT.                                                        
+            EXIT.                                                        
+      /                                                                  
+       3100-UPDATE-BATCH-CONTROL SECTION.                                
+      ***********************************                                
+      *                                                                  
+       3110-AUTOMATIC-BATCHING.                                          
+      *                                                                  
+      * Set up Batching                                                  
+      *                                                                  
+           MOVE 'AUTO'                 TO BATD-FUNCTION.                     
+           MOVE WSSP-TRANID            TO BATD-TRANID.                       
+           MOVE WSSP-BATCHKEY          TO BATD-BATCHKEY.                     
+                                                                             
+           CALL 'BATCDOR'           USING BATD-BATCDOR-REC.                  
+                                                                             
+           IF  BATD-STATUZ          NOT = O-K                                
+               MOVE BATD-STATUZ        TO SPG34-ACTION-ERR                   
+           END-IF.                                                           
+                                                                             
+           MOVE BATD-BATCHKEY          TO WSSP-BATCHKEY.                     
+      *                                                                      
+       3190-EXIT.                                                            
+            EXIT.                                                            
+      /                                                                      
+      *****************************************************************      
+      *     Decide which Transaction Program is Next                         
+      *****************************************************************      
+      *                                                                      
+       4000-WHERE-NEXT SECTION.                                              
+                                        
+      *************************                                                  
+      *                                                                          
+       4010-NEXT-PROGRAM.                                                        
+      *                                                                          
+      *  Set Next Program                                                        
+           IF SPG34-ACTION          NOT = '5'                                    
+           INITIALIZE                     ZEML-PARAMS                            
+           MOVE SPG34-EMPID             TO ZEML-EMPID                            
+            MOVE KEEPS                  TO ZEML-FUNCTION                         
+            MOVE ZEMLREC                TO ZEML-FORMAT                           
+            MOVE O-K                    TO ZEML-STATUZ                           
+                                                                                 
+            CALL 'ZEMLIO'            USING ZEML-PARAMS                           
+            IF ZEML-STATUZ           NOT = O-K AND MRNF                          
+               MOVE ZEML-PARAMS         TO SYSR-PARAMS                           
+               MOVE ZEML-STATUZ         TO SYSR-STATUZ                           
+               PERFORM 600-FATAL-ERROR                                           
+            END-IF                                                               
+            END-IF.                                                              
+                             
+            IF  SCRN-STATUZ          NOT = 'BACH'                       
+                MOVE 1                  TO WSSP-PROGRAM-PTR             
+            ELSE                                                        
+               MOVE 0                   TO WSSP-PROGRAM-PTR             
+               MOVE WSSP-NEXT1PROG      TO WSSP-NEXTPROG                
+            END-IF.                                                     
+                                                                        
+       *                                                                
+        4090-EXIT.                                                      
+             EXIT.                                                                                                          
+                                     
+
+
+
+                      
+
+                                                                           
+                                      
+
+
+

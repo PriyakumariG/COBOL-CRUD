@@ -1,0 +1,237 @@
+ 
+      * Generation Parameters - SCRVER(02)            Do Not Delete|              
+       IDENTIFICATION DIVISION.                                                   
+       PROGRAM-ID. PPG37.                                                         
+      *                                                                           
+      * Copyright 1986-2014, Computer Sciences Corporation.                       
+      *                                                                           
+      *                                                                           
+      *REMARKS.                                                                   
+      *                                                                           
+      * The remarks section should detail the main processes of the               
+      * program and any special functions.                                        
+      *                                                                           
+      ***********************************************************************     
+      *           AMENDMENT  HISTORY                                        *     
+      ***********************************************************************     
+      * DATE.... VSN/MOD  WORK UNIT    BY....                               *     
+      *                                                                     *     
+      **DD/MM/YY*************************************************************     
+      /                                                                           
+        ENVIRONMENT DIVISION.                                                 
+        CONFIGURATION SECTION.                                                
+        SOURCE-COMPUTER. IBM-AS400.                                           
+        OBJECT-COMPUTER. IBM-AS400.                                           
+                                                                              
+        DATA DIVISION.                                                        
+        WORKING-STORAGE SECTION.                                              
+        01  WSAA-PROG                   PIC X(05) VALUE 'PPG37'.              
+        01  WSAA-VERSION                PIC X(02) VALUE '01'.                 
+       *                                                                      
+        01  ERRORS.                                                           
+            03  E005                    PIC X(04) VALUE 'E005'.               
+       *                                                                      
+        01  TABLES.                                                           
+            03  TNNNN                   PIC X(05) VALUE 'TNNNN'.              
+       *                                                                      
+        01  FORMATS.                                                          
+            03  ZEMLREC                 PIC X(10) VALUE 'ZEMLREC'.            
+       /                                                                      
+            COPY OPSTATSREC.                                                  
+                                                                              
+      /                                                                          
+           COPY SYSERRREC.                                                       
+      /                                                                          
+           COPY VARCOM.                                                          
+           COPY ZEMLSKM.                                                         
+      /                                                                          
+       LINKAGE SECTION.                                                          
+                                                                                 
+           COPY WSSPCOMN.                                                        
+      /                                                                          
+       01  WSSP-USER-AREA              PIC X(768).                               
+      /                                                                          
+           COPY SCRNPARAMS.                                                      
+      /                                                                          
+           COPY SPG37SCR.                                                        
+      /                                                                          
+       PROCEDURE DIVISION           USING WSSP-COMMON-AREA                       
+                                          WSSP-USER-AREA                         
+                                          SCRN-SCREEN-PARAMS                     
+                                          SPG37-DATA-AREA.                       
+                                                                                
+           COPY MAING.                                                          
+      /                                                                         
+      *****************************************************************         
+      *      Initialise Fields for showing on Screen                            
+      *****************************************************************         
+      *                                                                         
+       1000-INITIALISE SECTION.                                                 
+      *************************                                                 
+      *                                                                         
+       1010-INITIALISE.                                                         
+      *                                                                         
+      *  Initialise Fields                                                      
+      *                                                                         
+           MOVE SPACES                 TO SPG37-DATA-AREA.                      
+                                                                                
+      *    Dummy field initialisation for prototype version.                    
+******     MOVE ZERO                                                            
+******          TO SPG37-DTEOJ                    .                             
+******                                                                          
+
+                                                                        
+            INITIALIZE                     ZEML-PARAMS                  
+            MOVE SPG37-EMPID            TO ZEML-EMPID                   
+            MOVE RETRV                  TO ZEML-FUNCTION                
+            MOVE ZEMLREC                TO ZEML-FORMAT                  
+            MOVE O-K                    TO ZEML-STATUZ                  
+                                                                        
+            CALL 'ZEMLIO'            USING ZEML-PARAMS                  
+            IF ZEML-STATUZ           NOT = O-K AND MRNF                 
+               MOVE ZEML-PARAMS         TO SYSR-PARAMS                  
+               MOVE ZEML-STATUZ         TO SYSR-STATUZ                  
+               PERFORM 600-FATAL-ERROR                                  
+            END-IF.                                                     
+                                                                        
+            MOVE ZEML-EMPID             TO SPG37-EMPID.                 
+                                                                        
+            INITIALIZE                     ZEML-PARAMS                  
+            MOVE SPG37-EMPID            TO ZEML-EMPID                   
+            MOVE RLSE                   TO ZEML-FUNCTION                
+             MOVE ZEMLREC                TO ZEML-FORMAT                 
+             MOVE O-K                    TO ZEML-STATUZ                  
+                                                                         
+             CALL 'ZEMLIO'            USING ZEML-PARAMS                  
+             IF ZEML-STATUZ           NOT = O-K AND MRNF                 
+                MOVE ZEML-PARAMS         TO SYSR-PARAMS                  
+                MOVE ZEML-STATUZ         TO SYSR-STATUZ                  
+                PERFORM 600-FATAL-ERROR                                  
+             END-IF.                                                     
+                                                                         
+             MOVE ZEML-EMPID             TO SPG37-EMPID.                 
+                                                                         
+             INITIALIZE                     ZEML-PARAMS                  
+             MOVE SPG37-EMPID            TO ZEML-EMPID                   
+             MOVE READH                  TO ZEML-FUNCTION                
+             MOVE ZEMLREC                TO ZEML-FORMAT                  
+             MOVE O-K                    TO ZEML-STATUZ                  
+                                                                         
+             CALL 'ZEMLIO'            USING ZEML-PARAMS                  
+                                                                         
+            MOVE ZEML-EMPID             TO SPG37-EMPID                   
+                                                                         
+           MOVE ZEML-EMPNM             TO SPG37-EMPNM               
+           MOVE ZEML-DTEOJ             TO SPG37-DTEOJ               
+           MOVE ZEML-DESGN             TO SPG37-DESGN               
+           MOVE ZEML-DEPTNM            TO SPG37-DEPTNM              
+                                                                    
+           IF ZEML-STATUZ           NOT = O-K                       
+              MOVE ZEML-PARAMS         TO SYSR-PARAMS               
+              MOVE ZEML-STATUZ         TO SYSR-STATUZ               
+              PERFORM 600-FATAL-ERROR                               
+           END-IF.                                                  
+      *                                                             
+      *    Set screen fields                                        
+      *                                                             
+                                                                    
+      *                                                             
+       1090-EXIT.                                                   
+            EXIT.                                                   
+      /                                                             
+      *                                                             
+      *    Sections performed from the 1000 section above.          
+      *                                                                          
+      /                                                                          
+       PRE-SCREEN-EDIT SECTION.                                                  
+      *************************                                                  
+      *                                                                          
+       PRE-START.                                                                
+      *---------------------------------------------------------------*          
+      *    This section will handle any action required on the screen *          
+      *    before the screen is painted.                              *          
+      *---------------------------------------------------------------*          
+            GO TO PRE-EXIT.                                                      
+      *                                                                          
+       PRE-EXIT.                                                                 
+           EXIT.                                                                 
+      /                                                                          
+      *****************************************************************          
+      *     Retrieve Screen Fields and Edit                                      
+      *****************************************************************          
+      *                                                                          
+       2000-SCREEN-EDIT SECTION.                                                 
+     **************************                                               
+     *                                                                        
+      2010-SCREEN-IO.                                                         
+     *                                                                        
+     *  Perform Screen Validation                                             
+     *                                                                        
+          MOVE O-K                    TO WSSP-EDTERROR.                       
+     *                                                                        
+      2020-VALIDATE.                                                          
+     *                                                                        
+                                                                              
+     *                                                                        
+     *    Validate fields                                                     
+     *                                                                        
+                                                                              
+     *                                                                        
+      2080-CHECK-FOR-ERRORS.                                                  
+     *                                                                        
+          IF  SPG37-ERROR-INDICATORS                                          
+                                   NOT = SPACES                               
+               MOVE 'Y'                TO WSSP-EDTERROR                            
+           END-IF.                                                                 
+      *                                                                            
+       2090-EXIT.                                                                  
+            EXIT.                                                                  
+      /                                                                            
+                                                                                   
+      *                                                                            
+      *    Sections performed from the 2000 section above.                         
+      *                                                                            
+                                                                                   
+      /                                                                            
+      *****************************************************************            
+      *     Update Database if required and Log Transaction                        
+      *****************************************************************            
+      *                                                                            
+       3000-UPDATE SECTION.                                                        
+      *********************                                                        
+      *                                                                            
+       3010-UPDATE-DATABASE.                                                       
+     *                                                                            
+                                                                                  
+     *                                                                            
+     *  Update database files as required / WSSP                                  
+     *                                                                            
+                                                                                  
+      3090-EXIT.                                                                  
+           EXIT.                                                                  
+                                                                                  
+     /                                                                            
+                                                                                  
+     *                                                                            
+     *    Sections performed from the 3000 section above.                         
+     *                                                                            
+                                                                                  
+     /                                                                            
+     *****************************************************************            
+     *     Decide which Transaction Program is Next                               
+     *****************************************************************            
+     *                                                                            
+                                                                                  
+
+       4000-WHERE-NEXT SECTION.                                             
+      *************************                                             
+      *                                                                     
+       4010-NEXT-PROGRAM.                                                   
+      *                                                                     
+      *  Set Next Program                                                   
+      *                                                                     
+           ADD 1                       TO WSSP-PROGRAM-PTR.                 
+      *                                                                     
+      *                                                                     
+       4090-EXIT.                                                           
+            EXIT.                                                           
